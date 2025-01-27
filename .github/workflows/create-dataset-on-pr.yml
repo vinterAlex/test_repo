@@ -15,7 +15,7 @@ jobs:
       - name: Set up Google Cloud credentials
         uses: google-github-actions/setup-gcloud@master
         with:
-          project-id: your-project-id
+          project-id: alexvspreadsheets
           service-account-key-file: ${{ secrets.BQ_DROP_SCHEMA_ON_MERGE }}
       
       - name: Create BigQuery dataset
