@@ -1,5 +1,4 @@
 name: Create BigQuery Dataset on PR
-
 on:
   pull_request:
     types: [opened]
@@ -7,18 +6,23 @@ on:
 jobs:
   create-bigquery-dataset:
     runs-on: ubuntu-latest
-    
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-      
+
       - name: Set up Google Cloud credentials
         uses: google-github-actions/setup-gcloud@main
         with:
           project-id: alexvspreadsheets
           service-account-key-file: ${{ secrets.BQ_DROP_SCHEMA_ON_MERGE }}
-      
+
       - name: Create BigQuery dataset
+        env:
+          BUCKET_NAME: "alexvspreadsheets"
+          DATASET_NAME: "dbt_cloud_pr_8545_${{ runner.uniqueId }}"
+
         run: |
-          # Replace this with actual code to create the BigQuery dataset
-          gcloud bigquery datasets create "dbt_cloud_pr_8545_${{ runner.uniqueId }}"
+          # Use gcloud to create the BigQuery dataset in a new shell.
+          gcloud auth activate-service-account --key-file ${{ secrets.BQ_DROP_SCHEMA_ON_MERGE }}
+          gcloud config set project ${BUCKET_NAME}
+          gcloud bigquery datasets create "${DATASET_NAME}"
