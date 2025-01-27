@@ -11,18 +11,16 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Set up Google Cloud credentials
-        uses: google-github-actions/setup-gcloud@main
+        uses: google-github-actions/auth@v1
         with:
-          project-id: alexvspreadsheets
-          service-account-key-file: ${{ secrets.BQ_DROP_SCHEMA_ON_MERGE }}
+          key_file: ${{ secrets.BQ_DROP_SCHEMA_ON_MERGE }}
 
       - name: Create BigQuery dataset
         env:
-          BUCKET_NAME: "alexvspreadsheets"
+          BUCKET_NAME: "652378321537"
           DATASET_NAME: "dbt_cloud_pr_8545_${{ runner.uniqueId }}"
 
         run: |
-          # Use gcloud to create the BigQuery dataset in a new shell.
           gcloud auth activate-service-account --key-file ${{ secrets.BQ_DROP_SCHEMA_ON_MERGE }}
           gcloud config set project ${BUCKET_NAME}
           gcloud bigquery datasets create "${DATASET_NAME}"
