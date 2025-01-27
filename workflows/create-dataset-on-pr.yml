@@ -1,0 +1,34 @@
+name: Create BigQuery Dataset on PR
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+env:
+  GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  setup-gcloud-auth:
+    runs-on: ubuntu-latest
+    steps:
+      - id: 'auth'
+        uses: 'google-github-actions/auth@v1'
+        with:
+            credentials_json: '${{ secrets.BQ_DROP_SCHEMA_ON_MERGE }}'
+
+  create-dataset:
+    needs: setup-gcloud-auth
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get Pull Request ID
+        run: |
+          echo "Getting pull request number"
+          PR_NUMBER=$(cat $GITHUB_EVENT_PATH/pull_request.json | jq -r .id)
+          echo "Pull request number is ${PR_NUMBER}"
+          echo "DATASET_NAME=dbt_cloud_pr_8545_${PR_NUMBER}" >> $GITHUB_ENV
+
+      - name: Create BigQuery Dataset
+        uses: 'google-github-actions/dbt@v1'
+        with:
+          args: |
+            run --profile alexvspreadsheets --target ${DATASET_NAME}
