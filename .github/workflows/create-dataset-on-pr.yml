@@ -15,7 +15,7 @@ jobs:
       # Step 2: Write Service Account Key to File
       - name: Write service account key to file
         run: |
-          echo "${{ secrets.BQ_DROP_SCHEMA_ON_MERGE }}" | base64 --decode > /tmp/service-account.json
+          echo "${{ secrets.BQ_DROP_SCHEMA_ON_MERGE }}" > /tmp/service-account.json
 
       # Step 3: Set up Google Cloud credentials
       - name: Set up Google Cloud credentials
