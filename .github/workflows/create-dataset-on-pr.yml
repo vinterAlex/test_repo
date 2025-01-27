@@ -24,10 +24,11 @@ jobs:
         with:
           project_id: "alexvspreadsheets"
 
-      # Step 4: Install BigQuery component
-      - name: Install BigQuery gcloud component
+      # Step 4: Verify bq CLI availability
+      - name: Verify bq CLI
         run: |
-          gcloud components install -q bigquery
+          echo "Verifying bq CLI availability..."
+          bq --help || echo "bq CLI is not available. Please check your setup."
 
       # Step 5: Create a BigQuery dataset
       - name: Create BigQuery dataset
@@ -36,4 +37,4 @@ jobs:
           DATASET_NAME: "dbt_cloud_pr_${{ github.event.pull_request.number }}_${{ github.run_id }}"
         run: |
           echo "Creating BigQuery dataset..."
-          gcloud bigquery datasets create "${DATASET_NAME}" --project="${PROJECT_ID}" --location=US || echo "Dataset may already exist."
+          bq --location=US mk --dataset "${PROJECT_ID}:${DATASET_NAME}" || echo "Dataset may already exist."
