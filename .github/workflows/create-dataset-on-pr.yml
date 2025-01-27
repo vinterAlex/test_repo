@@ -13,11 +13,12 @@ jobs:
       - name: Set up Google Cloud credentials
         uses: google-github-actions/auth@v1
         with:
-          key_file: ${{ secrets.BQ_DROP_SCHEMA_ON_MERGE }}
+          # Replace 'YOUR_SERVICE_ACCOUNT_KEY_FILE' with the actual path to your service account key file.
+          service_account_key_file: ${{ secrets.BQ_DROP_SCHEMA_ON_MERGE }}
 
       - name: Create BigQuery dataset
         env:
-          BUCKET_NAME: "652378321537"
+          BUCKET_NAME: "alexvspreadsheets"
           DATASET_NAME: "dbt_cloud_pr_8545_${{ runner.uniqueId }}"
 
         run: |
