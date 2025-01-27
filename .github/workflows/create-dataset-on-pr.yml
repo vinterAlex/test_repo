@@ -28,7 +28,7 @@ jobs:
       - name: Create BigQuery dataset
         env:
           PROJECT_ID: "alexvspreadsheets"
-          DATASET_PREFIX: "dbt_cloud_pr_${{ github.event.pull_request.number }}"
+          DATASET_PREFIX: "dbt_cloud_pr_8545_${{ github.event.pull_request.number }}"
         run: |
           echo "Finding the next dataset number..."
           
