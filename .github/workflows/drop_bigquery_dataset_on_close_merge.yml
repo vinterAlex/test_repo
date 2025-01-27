@@ -10,30 +10,33 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Step 1: Check out code
       - name: Checkout code
         uses: actions/checkout@v2
 
+      # Step 2: Extract Pull Request Number
       - name: Extract Pull Request Number
         id: extract_pr_number
-        run: echo "::set-output name=pr_number::${{ github.event.pull_request.number }}"  
+        run: echo "pr_number=${{ github.event.pull_request.number }}" >> $GITHUB_ENV
 
-
-      - id: 'auth'
-        uses: 'google-github-actions/auth@v1'
+      # Step 3: Authenticate with Google Cloud
+      - id: auth
+        uses: google-github-actions/auth@v1
         with:
-            credentials_json: '${{ secrets.BQ_DROP_SCHEMA_ON_MERGE }}'
+          credentials_json: '${{ secrets.BQ_DROP_SCHEMA_ON_MERGE }}'
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      # Step 4: Set up gcloud CLI
+      - name: Set up gcloud CLI
+        uses: google-github-actions/setup-gcloud@v1
         with:
-          python-version: '3.9'
-      - uses: google-github-actions/setup-gcloud@v0
-        with:
-          version: '390.0.0'
-          project_id:	alexvspreadsheets
+          project_id: "alexvspreadsheets"
 
-
+      # Step 5: Delete BigQuery Dataset
       - name: Delete BigQuery Dataset
+        env:
+          PROJECT_ID: "alexvspreadsheets"
+          PR_NUMBER: ${{ env.pr_number }}
         run: |
-          gcloud config set project alexvspreadsheets
-          bq rm -r -f alexvspreadsheets:dbt_cloud_pr_8545_${{ steps.extract_pr_number.outputs.pr_number }}
+          echo "Deleting dataset: ${PROJECT_ID}:dbt_cloud_pr_${PR_NUMBER}_1"
+          gcloud config set project ${PROJECT_ID}
+          bq rm -r -f "${PROJECT_ID}:dbt_cloud_pr_${PR_NUMBER}_1"
