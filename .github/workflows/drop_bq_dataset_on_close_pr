@@ -36,4 +36,4 @@ jobs:
       - name: Delete BigQuery Dataset
         run: |
           gcloud config set project alexvspreadsheets
-          bq rm -r -f alexvspreadsheets:dbt_cloud_pr_6_${{ steps.extract_pr_number.outputs.pr_number }}
+          bq rm -r -f alexvspreadsheets:dbt_cloud_pr_8545_${{ steps.extract_pr_number.outputs.pr_number }}
