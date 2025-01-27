@@ -1,0 +1,53 @@
+name: Create BigQuery Dataset on PR
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+jobs:
+  create-bigquery-dataset:
+    runs-on: ubuntu-latest
+    steps:
+      # Step 1: Check out the code
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      # Step 2: Authenticate with Google Cloud
+      - id: auth
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: '${{ secrets.BQ_DROP_SCHEMA_ON_MERGE }}'
+
+      # Step 3: Set up gcloud CLI
+      - name: Set up gcloud CLI
+        uses: google-github-actions/setup-gcloud@v1
+        with:
+          project_id: "alexvspreadsheets"
+
+      # Step 4: Create BigQuery dataset with an incremented name
+      - name: Create BigQuery dataset
+        env:
+          PROJECT_ID: "alexvspreadsheets"
+          DATASET_PREFIX: "dbt_cloud_pr_8545_${{ github.event.pull_request.number }}"
+        run: |
+          echo "Finding the next dataset number..."
+          
+          # List all existing datasets that match the prefix
+          DATASETS=$(bq ls --project_id="${PROJECT_ID}" | grep "${DATASET_PREFIX}" | awk '{print $1}')
+          
+          # Determine the next available suffix
+          MAX_SUFFIX=0
+          for DATASET in $DATASETS; do
+            SUFFIX=$(echo $DATASET | sed -E "s/^${DATASET_PREFIX}_([0-9]+)$/\1/")
+            if [[ "$SUFFIX" =~ ^[0-9]+$ ]]; then
+              MAX_SUFFIX=$(($SUFFIX > $MAX_SUFFIX ? $SUFFIX : $MAX_SUFFIX))
+            fi
+          done
+          
+          NEXT_SUFFIX=$((MAX_SUFFIX + 1))
+          DATASET_NAME="${PROJECT_ID}:${DATASET_PREFIX}_${NEXT_SUFFIX}"
+          
+          echo "Creating dataset: $DATASET_NAME"
+          
+          # Create the dataset
+          bq --location=US mk --dataset "$DATASET_NAME" || echo "Dataset may already exist."
