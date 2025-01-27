@@ -31,16 +31,16 @@ jobs:
         with:
           project_id: "alexvspreadsheets"
 
-      # Step 5: Delete all BigQuery datasets matching the pattern
+      # Step 5: Delete BigQuery Datasets
       - name: Delete BigQuery Datasets
         env:
           PROJECT_ID: "alexvspreadsheets"
           PR_NUMBER: ${{ env.pr_number }}
         run: |
-          echo "Deleting all datasets with prefix dbt_cloud_pr_${PR_NUMBER}_"
+          echo "Deleting all datasets with prefix dbt_cloud_pr_*_${PR_NUMBER}_"
           
-          # List datasets with matching prefix and delete each
-          bq ls --project_id="${PROJECT_ID}" | grep "dbt_cloud_pr_${PR_NUMBER}_" | awk '{print $1}' | while read dataset; do
+          # List datasets with matching pattern dbt_cloud_pr_*_${PR_NUMBER}_ and delete each
+          bq ls --project_id="${PROJECT_ID}" | grep "dbt_cloud_pr_.*_${PR_NUMBER}_" | awk '{print $1}' | while read dataset; do
             echo "Deleting dataset: ${PROJECT_ID}:${dataset}"
             bq rm -r -f "${PROJECT_ID}:${dataset}"
           done
