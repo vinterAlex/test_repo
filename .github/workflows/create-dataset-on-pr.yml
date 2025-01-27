@@ -24,7 +24,12 @@ jobs:
         with:
           project_id: "alexvspreadsheets"
 
-      # Step 4: Create a BigQuery dataset
+      # Step 4: Install BigQuery component
+      - name: Install BigQuery gcloud component
+        run: |
+          gcloud components install -q bigquery
+
+      # Step 5: Create a BigQuery dataset
       - name: Create BigQuery dataset
         env:
           PROJECT_ID: "alexvspreadsheets"
