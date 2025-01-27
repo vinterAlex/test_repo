@@ -24,17 +24,30 @@ jobs:
         with:
           project_id: "alexvspreadsheets"
 
-      # Step 4: Verify bq CLI availability
-      - name: Verify bq CLI
-        run: |
-          echo "Verifying bq CLI availability..."
-          bq --help || echo "bq CLI is not available. Please check your setup."
-
-      # Step 5: Create a BigQuery dataset
+      # Step 4: Create BigQuery dataset with an incremented name
       - name: Create BigQuery dataset
         env:
           PROJECT_ID: "alexvspreadsheets"
-          DATASET_NAME: "dbt_cloud_pr_${{ github.event.pull_request.number }}_${{ github.run_id }}"
+          DATASET_PREFIX: "dbt_cloud_pr_${{ github.event.pull_request.number }}"
         run: |
-          echo "Creating BigQuery dataset..."
-          bq --location=US mk --dataset "${PROJECT_ID}:${DATASET_NAME}" || echo "Dataset may already exist."
+          echo "Finding the next dataset number..."
+          
+          # List all existing datasets that match the prefix
+          DATASETS=$(bq ls --project_id="${PROJECT_ID}" | grep "${DATASET_PREFIX}" | awk '{print $1}')
+          
+          # Determine the next available suffix
+          MAX_SUFFIX=0
+          for DATASET in $DATASETS; do
+            SUFFIX=$(echo $DATASET | sed -E "s/^${DATASET_PREFIX}_([0-9]+)$/\1/")
+            if [[ "$SUFFIX" =~ ^[0-9]+$ ]]; then
+              MAX_SUFFIX=$(($SUFFIX > $MAX_SUFFIX ? $SUFFIX : $MAX_SUFFIX))
+            fi
+          done
+          
+          NEXT_SUFFIX=$((MAX_SUFFIX + 1))
+          DATASET_NAME="${PROJECT_ID}:${DATASET_PREFIX}_${NEXT_SUFFIX}"
+          
+          echo "Creating dataset: $DATASET_NAME"
+          
+          # Create the dataset
+          bq --location=US mk --dataset "$DATASET_NAME" || echo "Dataset may already exist."
