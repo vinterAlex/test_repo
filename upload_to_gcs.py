@@ -17,10 +17,20 @@ s3_client = boto3.client(
     region_name="us-east-1"  # Region for MinIO
 )
 
+# Function to get the list of changed files (both staged and unstaged)
+def get_changed_files():
+    # Get unstaged changes (working directory vs. HEAD)
+    changed_files = subprocess.check_output(["git", "diff", "--name-only", "HEAD"]).decode("utf-8").splitlines()
+    
+    # Get staged changes (index vs. HEAD)
+    staged_files = subprocess.check_output(["git", "diff", "--name-only", "--cached", "HEAD"]).decode("utf-8").splitlines()
+    
+    # Combine unstaged and staged files
+    return list(set(changed_files + staged_files))
+
 # Get the list of changed files in the GitHub repository
 try:
-    # Instead of checking for HEAD~1, we simply compare the working directory to the latest commit (HEAD)
-    changed_files = subprocess.check_output(["git", "diff", "--name-only", "HEAD"]).decode("utf-8").splitlines()
+    changed_files = get_changed_files()
     
     if not changed_files:
         print("No changed files detected.")
