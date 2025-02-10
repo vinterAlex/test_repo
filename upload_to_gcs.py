@@ -1,6 +1,5 @@
-from google.cloud import storage
+import boto3
 import os
-from google.auth import exceptions
 
 LOCAL_MODE = os.getenv("LOCAL_MODE", "false").lower() == "true"
 
@@ -11,30 +10,31 @@ MINIO_SECRET_KEY = "password"  # Replace with your MinIO secret key
 
 if LOCAL_MODE:
     # Use MinIO as a local alternative to Google Cloud Storage
-    storage_client = storage.Client(
-        credentials=None,  # MinIO does not need Google credentials
-        project="local-project",  # Placeholder project
-        _http=None  # We’ll manually configure the API URL
-    )
-    
-    # Manually set the endpoint for MinIO (this simulates Google Cloud Storage)
-    storage_client._http = storage_client._http.with_options(
+    s3_client = boto3.client(
+        's3',
         endpoint_url=MINIO_ENDPOINT,
         aws_access_key_id=MINIO_ACCESS_KEY,
-        aws_secret_access_key=MINIO_SECRET_KEY
+        aws_secret_access_key=MINIO_SECRET_KEY,
+        region_name="us-east-1"  # You can change the region if needed
     )
-    
+
     # Specify your MinIO bucket name here
     bucket_name = "my-bucket"  # The bucket you created in MinIO WebUI
-    bucket = storage_client.bucket(bucket_name)
+    
+    # Upload file to MinIO bucket
+    file_name = "your-file.txt"  # Replace with your file's name
+    s3_client.upload_file(file_name, bucket_name, file_name)
+    print(f"File {file_name} uploaded successfully to MinIO bucket {bucket_name}!")
 
 else:
-    # Use actual Google Cloud Storage (for production)
+    # Use actual Google Cloud Storage for production
+    from google.cloud import storage
+
+    # Actual Google Cloud Storage logic
     storage_client = storage.Client()
-    bucket = storage_client.bucket("my-bucket")
+    bucket = storage_client.bucket("your-gcs-bucket")
 
-# Upload file to MinIO or GCS bucket
-blob = bucket.blob("your-file.txt")
-blob.upload_from_filename("your-file.txt")
-
-print("File uploaded successfully!")
+    # Upload file to GCS bucket
+    blob = bucket.blob("your-file.txt")
+    blob.upload_from_filename("your-file.txt")
+    print("File uploaded successfully to GCS!")

@@ -8,14 +8,16 @@ on:
 jobs:
   upload:
     runs-on: ubuntu-latest
+    env:
+      LOCAL_MODE: 'true'  # Set this to 'true' for local MinIO upload
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Upload Files to Storage
-        env:
-          LOCAL_MODE: 'true'
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.BQ_DROP_SCHEMA_ON_MERGE }}
+      - name: Install dependencies
         run: |
-          pip install google-cloud-storage
-          python upload_to_gcs.py
+          pip install boto3
+
+      - name: Upload file to MinIO
+        run: |
+          python your_script.py  # Replace with your actual Python script name
