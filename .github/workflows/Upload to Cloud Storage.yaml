@@ -1,9 +1,11 @@
-name: Upload to Cloud Storage
+name: Upload Changed Files to MinIO
 
 on:
   push:
     branches:
       - main
+    paths:
+      - '**/*'  # Monitor all files
 
 jobs:
   upload:
@@ -18,6 +20,6 @@ jobs:
         run: |
           pip install boto3
 
-      - name: Upload file to MinIO
+      - name: Upload changed files to MinIO
         run: |
-          python upload_to_gcs.py  # Replace with your actual Python script name
+          python upload_to_gcs.py

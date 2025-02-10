@@ -1,40 +1,33 @@
-import boto3
 import os
-
-LOCAL_MODE = os.getenv("LOCAL_MODE", "false").lower() == "true"
+import boto3
+import subprocess
 
 # MinIO Configuration
 MINIO_ENDPOINT = "http://localhost:9000"
 MINIO_ACCESS_KEY = "admin"  # Replace with your MinIO access key
 MINIO_SECRET_KEY = "password"  # Replace with your MinIO secret key
+bucket_name = "my-bucket"  # MinIO bucket name
 
-if LOCAL_MODE:
-    # Use MinIO as a local alternative to Google Cloud Storage
-    s3_client = boto3.client(
-        's3',
-        endpoint_url=MINIO_ENDPOINT,
-        aws_access_key_id=MINIO_ACCESS_KEY,
-        aws_secret_access_key=MINIO_SECRET_KEY,
-        region_name="us-east-1"  # You can change the region if needed
-    )
+# Initialize the MinIO client (boto3)
+s3_client = boto3.client(
+    's3',
+    endpoint_url=MINIO_ENDPOINT,
+    aws_access_key_id=MINIO_ACCESS_KEY,
+    aws_secret_access_key=MINIO_SECRET_KEY,
+    region_name="us-east-1"  # Region for MinIO
+)
 
-    # Specify your MinIO bucket name here
-    bucket_name = "my-bucket"  # The bucket you created in MinIO WebUI
-    
-    # Upload file to MinIO bucket
-    file_name = "your-file.txt"  # Replace with your file's name
-    s3_client.upload_file(file_name, bucket_name, file_name)
-    print(f"File {file_name} uploaded successfully to MinIO bucket {bucket_name}!")
+# Get the list of changed files in the GitHub repository
+changed_files = subprocess.check_output(["git", "diff", "--name-only", "HEAD~1", "HEAD"]).decode("utf-8").splitlines()
 
+if not changed_files:
+    print("No changed files detected.")
 else:
-    # Use actual Google Cloud Storage for production
-    from google.cloud import storage
-
-    # Actual Google Cloud Storage logic
-    storage_client = storage.Client()
-    bucket = storage_client.bucket("your-gcs-bucket")
-
-    # Upload file to GCS bucket
-    blob = bucket.blob("your-file.txt")
-    blob.upload_from_filename("your-file.txt")
-    print("File uploaded successfully to GCS!")
+    for file in changed_files:
+        if os.path.isfile(file):  # Ensure it's a valid file (not a directory)
+            print(f"Uploading file: {file}")
+            try:
+                s3_client.upload_file(file, bucket_name, file)
+                print(f"File {file} uploaded successfully to MinIO.")
+            except Exception as e:
+                print(f"Error uploading file {file}: {e}")
