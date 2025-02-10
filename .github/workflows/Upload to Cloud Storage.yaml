@@ -20,4 +20,4 @@ jobs:
 
       - name: Upload file to MinIO
         run: |
-          python your_script.py  # Replace with your actual Python script name
+          python upload_to_gcs.py  # Replace with your actual Python script name
