@@ -1,0 +1,46 @@
+name: Drop BigQuery Dataset Generated
+
+on:
+  pull_request:
+    types:
+      - closed
+
+jobs:
+  drop_dataset:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Check out code
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Step 2: Extract Pull Request Number
+      - name: Extract Pull Request Number
+        id: extract_pr_number
+        run: echo "pr_number=${{ github.event.pull_request.number }}" >> $GITHUB_ENV
+
+      # Step 3: Authenticate with Google Cloud
+      - id: auth
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: '${{ secrets.BQ_DROP_SCHEMA_ON_MERGE }}'
+
+      # Step 4: Set up gcloud CLI
+      - name: Set up gcloud CLI
+        uses: google-github-actions/setup-gcloud@v1
+        with:
+          project_id: "alexvspreadsheets"
+
+      # Step 5: Delete BigQuery Datasets
+      - name: Delete BigQuery Datasets
+        env:
+          PROJECT_ID: "alexvspreadsheets"
+          PR_NUMBER: ${{ env.pr_number }}
+        run: |
+          echo "Deleting all datasets with prefix dbt_cloud_pr_*_${PR_NUMBER}_"
+          
+          # List datasets with matching pattern dbt_cloud_pr_*_${PR_NUMBER}_ and delete each
+          bq ls --project_id="${PROJECT_ID}" | grep "dbt_cloud_pr_.*_${PR_NUMBER}_" | awk '{print $1}' | while read dataset; do
+            echo "Deleting dataset: ${PROJECT_ID}:${dataset}"
+            bq rm -r -f "${PROJECT_ID}:${dataset}"
+          done
