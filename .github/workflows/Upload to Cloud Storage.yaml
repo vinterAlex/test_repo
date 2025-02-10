@@ -1,0 +1,21 @@
+name: Upload to Cloud Storage
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Upload Files to Storage
+        env:
+          LOCAL_MODE: 'true'
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.BQ_DROP_SCHEMA_ON_MERGE }}
+        run: |
+          pip install google-cloud-storage
+          python upload_to_gcs.py
